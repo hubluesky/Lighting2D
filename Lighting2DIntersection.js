@@ -39,9 +39,6 @@ var Lighting2DIntersection = /** @class */ (function () {
             distance: T1
         };
     };
-    /**
-     * @link {https://blog.csdn.net/qq592116366/article/details/50674822}
-     */
     Lighting2DIntersection.lineSegmentIntersecCircleSqDistance = function (p1, p2, pc) {
         var v1x = pc.x - p1.x;
         var v1y = pc.y - p1.y;
@@ -71,26 +68,28 @@ var Lighting2DIntersection = /** @class */ (function () {
         y = pc.y - y;
         return x * x + y * y;
     };
-    Lighting2DIntersection.getSquaredDistance = function (point1, point2) {
-        var x = point2.x - point1.x;
-        var y = point2.y - point1.y;
-        return x * x + y * y;
-    };
-    Lighting2DIntersection.getSegments = function (polygons, sightPoint, radius) {
+    Lighting2DIntersection.getSegments = function (data, sightPoint, radius) {
         var sqRadius = radius * radius;
         var segments = [];
-        for (var _i = 0, polygons_1 = polygons; _i < polygons_1.length; _i++) {
-            var points = polygons_1[_i];
+        var foreachPoints = function (points, callback) {
             for (var i = 0; i < points.length; i++) {
                 var point1 = points[i];
                 var point2 = points[(i + 1) % points.length];
+                callback(point1, point2);
+            }
+        };
+        for (var _i = 0, _a = data.polygons; _i < _a.length; _i++) {
+            var polygon = _a[_i];
+            foreachPoints(polygon, function (point1, point2) {
                 if (radius == Infinity)
                     segments.push({ point1: point1, point2: point2 });
-                // else if (points == polygons[0] || Lighting2DIntersection.getSquaredDistance(point1, sightPoint) <= sqRadius || Lighting2DIntersection.getSquaredDistance(point2, sightPoint) <= sqRadius)
-                else if (points == polygons[0] || Lighting2DIntersection.lineSegmentIntersecCircleSqDistance(point1, point2, sightPoint) <= sqRadius)
+                else if (Lighting2DIntersection.lineSegmentIntersecCircleSqDistance(point1, point2, sightPoint) <= sqRadius)
                     segments.push({ point1: point1, point2: point2 });
-            }
+            });
         }
+        foreachPoints(data.border, function (point1, point2) {
+            segments.push({ point1: point1, point2: point2 });
+        });
         return segments;
     };
     Lighting2DIntersection.getUniquePoints = function (segments) {
@@ -115,11 +114,10 @@ var Lighting2DIntersection = /** @class */ (function () {
         }
         return points;
     };
-    Lighting2DIntersection.getSightPolygon = function (polygons, sightPoint, radius) {
+    Lighting2DIntersection.getSightPolygon = function (data, sightPoint, radius) {
         // Get all unique points
-        var segments = Lighting2DIntersection.getSegments(polygons, sightPoint, radius);
+        var segments = Lighting2DIntersection.getSegments(data, sightPoint, radius);
         var uniquePoints = Lighting2DIntersection.getUniquePoints(segments);
-        // console.log("segments", segments.length, segments, uniquePoints.length, uniquePoints);
         // Get all angles
         var uniqueAngles = [];
         for (var j = 0; j < uniquePoints.length; j++) {

@@ -10,6 +10,11 @@ interface Segment {
     point1: Vector2, point2: Vector2;
 }
 
+interface LightingPolygons {
+    border: Vector2[];
+    polygons: Vector2[][];
+}
+
 export default class Lighting2DIntersection {
 
     // Find intersection of RAY & SEGMENT
@@ -54,9 +59,6 @@ export default class Lighting2DIntersection {
         };
     }
 
-    /**
-     * @link {https://blog.csdn.net/qq592116366/article/details/50674822}
-     */
     private static lineSegmentIntersecCircleSqDistance(p1: Vector2, p2: Vector2, pc: Vector2): number {
         let v1x = pc.x - p1.x;
         let v1y = pc.y - p1.y;
@@ -85,26 +87,27 @@ export default class Lighting2DIntersection {
         return x * x + y * y;
     }
 
-    private static getSquaredDistance(point1: Vector2, point2: Vector2): number {
-        let x = point2.x - point1.x;
-        let y = point2.y - point1.y;
-        return x * x + y * y;
-    }
-
-    private static getSegments(polygons: Vector2[][], sightPoint: Vector2, radius: number): Segment[] {
+    private static getSegments(data: LightingPolygons, sightPoint: Vector2, radius: number): Segment[] {
         let sqRadius = radius * radius;
         let segments: Segment[] = [];
-        for (let points of polygons) {
+        let foreachPoints = function (points: Vector2[], callback: (p1: Vector2, p2: Vector2) => void) {
             for (let i = 0; i < points.length; i++) {
                 let point1 = points[i];
                 let point2 = points[(i + 1) % points.length];
-                if (radius == Infinity)
-                    segments.push({ point1, point2 });
-                // else if (points == polygons[0] || Lighting2DIntersection.getSquaredDistance(point1, sightPoint) <= sqRadius || Lighting2DIntersection.getSquaredDistance(point2, sightPoint) <= sqRadius)
-                else if (points == polygons[0] || Lighting2DIntersection.lineSegmentIntersecCircleSqDistance(point1, point2, sightPoint) <= sqRadius)
-                    segments.push({ point1, point2 });
+                callback(point1, point2);
             }
         }
+        for (let polygon of data.polygons) {
+            foreachPoints(polygon, function (point1, point2) {
+                if (radius == Infinity)
+                    segments.push({ point1, point2 });
+                else if (Lighting2DIntersection.lineSegmentIntersecCircleSqDistance(point1, point2, sightPoint) <= sqRadius)
+                    segments.push({ point1, point2 });
+            })
+        }
+        foreachPoints(data.border, function (point1, point2) {
+            segments.push({ point1, point2 });
+        });
         return segments;
     }
 
@@ -129,13 +132,11 @@ export default class Lighting2DIntersection {
         return points;
     }
 
-    public static getSightPolygon(polygons: Vector2[][], sightPoint: Vector2, radius: number): Vector2[] {
+    public static getSightPolygon(data: LightingPolygons, sightPoint: Vector2, radius: number): Vector2[] {
 
         // Get all unique points
-        let segments = Lighting2DIntersection.getSegments(polygons, sightPoint, radius);
+        let segments = Lighting2DIntersection.getSegments(data, sightPoint, radius);
         let uniquePoints = Lighting2DIntersection.getUniquePoints(segments);
-
-        // console.log("segments", segments.length, segments, uniquePoints.length, uniquePoints);
 
         // Get all angles
         let uniqueAngles: number[] = [];

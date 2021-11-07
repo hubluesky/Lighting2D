@@ -11,22 +11,15 @@ function draw() {
 
     // Draw segments
     ctx.strokeStyle = "#999";
-    for (let segment of segments) {
-        for (var i = 0; i < segment.length; i++) {
-            var point1 = segment[i];
-            var point2 = segment[(i + 1) % segment.length];
-            ctx.beginPath();
-            ctx.moveTo(point1.x, point1.y);
-            ctx.lineTo(point2.x, point2.y);
-            ctx.stroke();
-        }
+    drawPolygon(ctx, lightingData.border);
+    for (let polygon of lightingData.polygons) {
+        drawPolygon(ctx, polygon);
     }
 
-
-    var intersects = Lighting2DIntersection.getSightPolygon(segments, Mouse, Infinity);
+    var intersects = Lighting2DIntersection.getSightPolygon(lightingData, Mouse, Infinity);
     drawLighting(ctx, "#dd3838", intersects);
     if (!moueHold) {
-        var intersects = Lighting2DIntersection.getSightPolygon(segments, Mouse, sightRadius);
+        var intersects = Lighting2DIntersection.getSightPolygon(lightingData, Mouse, sightRadius);
         drawLighting(ctx, "#00008888", intersects);
     }
 
@@ -46,6 +39,17 @@ function draw() {
     ctx.stroke();
 }
 
+function drawPolygon(ctx, points) {
+    for (var i = 0; i < points.length; i++) {
+        var point1 = points[i];
+        var point2 = points[(i + 1) % points.length];
+        ctx.beginPath();
+        ctx.moveTo(point1.x, point1.y);
+        ctx.lineTo(point2.x, point2.y);
+        ctx.stroke();
+    }
+}
+
 function drawLighting(ctx, color, intersects) {
     // DRAW AS A GIANT POLYGON
     ctx.fillStyle = color;
@@ -58,54 +62,55 @@ function drawLighting(ctx, color, intersects) {
     ctx.fill();
 }
 
-var segments = [
-    // Border
-    [
+const lightingData = {
+    border: [
         { x: 0, y: 0 },
         { x: 640, y: 0 },
         { x: 640, y: 360 },
         { x: 0, y: 360 },
     ],
-    // Polygon #1
-    [
-        { x: 100, y: 150 },
-        { x: 120, y: 50 },
-        { x: 200, y: 80 },
-        { x: 140, y: 210 },
-    ],
-    // Polygon #2
-    [
-        { x: 100, y: 200 },
-        { x: 120, y: 250 },
-        { x: 60, y: 300 },
-    ],
-    // Polygon #3
-    [
-        { x: 200, y: 260 },
-        { x: 220, y: 150 },
-        { x: 300, y: 200 },
-        { x: 350, y: 320 },
-    ],
-    // Polygon #4
-    [
-        { x: 340, y: 60 },
-        { x: 360, y: 40 },
-        { x: 370, y: 70 },
-    ],
-    // Polygon #5
-    [
-        { x: 450, y: 190 },
-        { x: 560, y: 170 },
-        { x: 540, y: 270 },
-        { x: 430, y: 290 },
-    ],
-    // Polygon #6
-    [
-        { x: 400, y: 95 },
-        { x: 580, y: 50 },
-        { x: 480, y: 150 },
-    ],
-];
+    polygons: [
+        // Polygon #1
+        [
+            { x: 100, y: 150 },
+            { x: 120, y: 50 },
+            { x: 200, y: 80 },
+            { x: 140, y: 210 },
+        ],
+        // Polygon #2
+        [
+            { x: 100, y: 200 },
+            { x: 120, y: 250 },
+            { x: 60, y: 300 },
+        ],
+        // Polygon #3
+        [
+            { x: 200, y: 260 },
+            { x: 220, y: 150 },
+            { x: 300, y: 200 },
+            { x: 350, y: 320 },
+        ],
+        // Polygon #4
+        [
+            { x: 340, y: 60 },
+            { x: 360, y: 40 },
+            { x: 370, y: 70 },
+        ],
+        // Polygon #5
+        [
+            { x: 450, y: 190 },
+            { x: 560, y: 170 },
+            { x: 540, y: 270 },
+            { x: 430, y: 290 },
+        ],
+        // Polygon #6
+        [
+            { x: 400, y: 95 },
+            { x: 580, y: 50 },
+            { x: 480, y: 150 },
+        ],
+    ]
+}
 
 // DRAW LOOP
 window.requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.msRequestAnimationFrame;
